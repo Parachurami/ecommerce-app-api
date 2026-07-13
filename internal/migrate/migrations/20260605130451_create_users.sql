@@ -3,7 +3,7 @@ SELECT 'up SQL query';
 
 CREATE EXTENSION IF NOT EXISTS citext;
 
-CREATE TYPE IF NOT EXISTS user_role AS ENUM(
+CREATE TYPE user_role AS ENUM(
     'user',
     'admin'
 );

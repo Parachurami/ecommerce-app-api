@@ -23,7 +23,7 @@ func NewStore(db *pgxpool.Pool) *Store {
 	}
 }
 
-func (s *Store) GetUserById(id int64, ctx context.Context) (*types.User, error) {
+func (s *Store) GetUserById(id uuid.UUID, ctx context.Context) (*types.User, error) {
 	query := "SELECT * FROM users WHERE id = $1"
 	rows, queryError := s.db.Query(ctx, query, id)
 	if queryError != nil {
@@ -37,7 +37,8 @@ func (s *Store) GetUserById(id int64, ctx context.Context) (*types.User, error) 
 		email := &user.Email
 		password := &user.Password
 		createdAt := &user.CreatedAt
-		if scanError := rows.Scan(id, email, password, createdAt); scanError != nil {
+		role := &user.UserRole
+		if scanError := rows.Scan(id, email, password, role, createdAt); scanError != nil {
 			return nil, scanError
 		}
 	}
@@ -177,4 +178,147 @@ func (s *Store) UpdateProfile(id uuid.UUID, params *types.UpdateProfileParams, c
 		return nil, err
 	}
 	return profile, nil
+}
+
+func (store *Store) CreateProduct(userId uuid.UUID, params *types.CreateProductParams, ctx context.Context) (*types.Product, error) {
+	/*
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+		    userId UUID NOT NULL,
+		    name TEXT NOT NULL,
+		    description TEXT NOT NULL,
+		    budget FLOAT NOT NULL,
+		    skills TEXT[],
+		    duration INTERVAL NOT NULL,
+		    expiration INTERVAL NOT NULL,
+		    image_url TEXT,
+		    deliverables TEXT[],
+		    createdAt TIMESTAMPTZ DEFAULT NOW(),
+		    updatedAt TIMESTAMPTZ DEFAULT NOW(),
+	*/
+	builder := utils.Psql.
+		Insert("products").
+		Columns("userId", "name", "description", "budget", "skills", "duration", "expiration", "image_url", "deliverables", "createdAt", "updatedAt").
+		Values(userId, params.Name, params.Desciption, params.Budget, params.Skills, params.Duration, params.Expiration, params.ImageUrl.String, params.Deliverables, time.Now(), time.Now()).
+		Suffix("RETURNING *")
+	sql, args, sqlErr := builder.ToSql()
+	if sqlErr != nil {
+		log.Print("Could not execute query: ", sqlErr.Error())
+		return nil, errors.New("Could not execute query")
+	}
+	product := new(types.Product)
+	if err := store.db.QueryRow(ctx, sql, args...).Scan(&product.Id, &product.UserId, &product.Name, &product.Description, &product.Budget, &product.Skills, &product.Duration, &product.Expiration, &product.ImageUrl, &product.Deliverables, &product.CreatedAt, &product.UpdatedAt); err != nil {
+		log.Print("Could not create product: ", err.Error())
+		return nil, errors.New("Could not create product")
+	}
+	return product, nil
+}
+
+func (store *Store) UpdateProduct(userId uuid.UUID, params *types.UpdateProductParams, ctx context.Context) (*types.Product, error) {
+	builder := utils.Psql.Update("products").Where(squirrel.Eq{"userId": userId})
+	if params.Budget != nil {
+		builder = builder.Set("budget", *params.Budget)
+	}
+	if params.Deliverables != nil {
+		builder = builder.Set("deliverables", *params.Deliverables)
+	}
+	if params.Desciption != nil {
+		builder = builder.Set("description", *params.Desciption)
+	}
+	if params.ImageUrl != nil {
+		builder = builder.Set("image_url", *params.ImageUrl)
+	}
+	if params.Name != nil {
+		builder = builder.Set("name", *params.Name)
+	}
+	if params.Duration != nil {
+		builder = builder.Set("duration", *params.Duration)
+	}
+	if params.Expiration != nil {
+		builder = builder.Set("expiration", *params.Expiration)
+	}
+	if params.Skills != nil {
+		builder = builder.Set("skills", *params.Skills)
+	}
+	builder = builder.Set("updatedAt", time.Now()).Suffix("RETURNING *")
+	sql, args, sqlErr := builder.ToSql()
+	if sqlErr != nil {
+		log.Print("Error converting to sql: ", sqlErr)
+		return nil, utils.InternalServerError
+	}
+	rows, rowErr := store.db.Query(ctx, sql, args...)
+	if rowErr != nil {
+		log.Print("There was a row error: ", rowErr.Error())
+		return nil, utils.InternalServerError
+	}
+	product := new(types.Product)
+	for rows.Next() {
+		scanErr := rows.Scan(&product.Id, &product.UserId, &product.Name, &product.Description,
+			&product.Budget, &product.Budget, &product.Skills, &product.Duration, &product.Expiration, &product.ImageUrl,
+			&product.Deliverables, &product.CreatedAt, &product.UpdatedAt)
+		if scanErr != nil {
+			log.Print("Error scanning product after update: ", scanErr)
+			return nil, utils.InternalServerError
+		}
+	}
+	return product, nil
+}
+
+func (store *Store) GetProducts(userId uuid.UUID, ctx context.Context) ([]types.Product, error) {
+	builder := utils.Psql.Select("*").From("products").Where(squirrel.Eq{"userId": userId})
+	sql, args, sqlErr := builder.ToSql()
+	if sqlErr != nil {
+		log.Print("Error converting to sql: ", sqlErr)
+		return nil, utils.InternalServerError
+	}
+	rows, queryErr := store.db.Query(ctx, sql, args...)
+	if queryErr != nil {
+		log.Print("Error querying products: ", queryErr)
+		return nil, utils.InternalServerError
+	}
+	products := make([]types.Product, 0)
+	for rows.Next() {
+		/*
+				id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			    userId UUID NOT NULL,
+			    name TEXT NOT NULL,
+			    description TEXT NOT NULL,
+			    budget FLOAT NOT NULL,
+			    skills TEXT[],
+			    duration INTERVAL NOT NULL,
+			    expiration INTERVAL NOT NULL,
+			    image_url TEXT,
+			    deliverables TEXT[],
+			    createdAt TIMESTAMPTZ DEFAULT NOW(),
+			    updatedAt TIMESTAMPTZ DEFAULT NOW(),
+		*/
+		product := new(types.Product)
+		if err := utils.ScanRow(rows, product); err != nil {
+			log.Print("Error scanning row: ", err)
+			return nil, utils.InternalServerError
+		}
+		products = append(products, *product)
+	}
+	return products, nil
+}
+
+func (store *Store) DeleteProductById(userId, productId uuid.UUID, ctx context.Context) error {
+	builder := utils.Psql.Delete("products").Where(squirrel.Eq{"userId": userId, "id": productId})
+	sql, args, sqlErr := builder.ToSql()
+	if sqlErr != nil {
+		log.Print("Error converting builder to sql: ", sqlErr)
+		return utils.InternalServerError
+	}
+	if _, executionErr := store.db.Exec(ctx, sql, args...); executionErr != nil {
+		log.Print("Error executing query: ", executionErr)
+		return utils.InternalServerError
+	}
+	return nil
+}
+
+func (store *Store) DeleteProductsByIds(ctx context.Context, userId uuid.UUID, productIds uuid.UUIDs) error {
+	var err error = nil
+	builder := utils.Psql.Delete("products").Where(squirrel.Eq{"userId": userId, "id": productIds})
+	sql, args, err := builder.ToSql()
+	_, err = store.db.Exec(ctx, sql, args...)
+	return err
 }

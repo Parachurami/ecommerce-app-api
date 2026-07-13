@@ -5,23 +5,27 @@ import (
 	"net/http"
 
 	userAuth "github.com/Parachurami/ecommerce-app-api/internal/auth"
+	"github.com/Parachurami/ecommerce-app-api/internal/product"
 	"github.com/Parachurami/ecommerce-app-api/internal/profile"
 	"github.com/Parachurami/ecommerce-app-api/internal/store"
 	"github.com/Parachurami/ecommerce-app-api/utils"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 )
 
 type application struct {
-	db     *pgxpool.Pool
-	config config
+	db          *pgxpool.Pool
+	config      config
+	redisClient *redis.Client
 }
 
-func NewApp(db *pgxpool.Pool, config config) *application {
+func NewApp(db *pgxpool.Pool, redisClient *redis.Client, config config) *application {
 	return &application{
-		db:     db,
-		config: config,
+		db:          db,
+		config:      config,
+		redisClient: redisClient,
 	}
 }
 
@@ -37,16 +41,30 @@ func (app *application) Mount() http.Handler {
 		})
 		mainRouter.Route("/auth", func(r chi.Router) {
 			authService := userAuth.NewService(dbStore)
-			authHandler := userAuth.NewHandler(authService)
+			authHandler := userAuth.NewHandler(authService, app.redisClient)
 			r.Post("/login", authHandler.LoginUser)
 			r.Post("/register", authHandler.RegisterUser)
+			r.Route("/logout", func(LogoutRouter chi.Router) {
+				LogoutRouter.Use(utils.WithJWT)
+				LogoutRouter.Post("/", authHandler.Logout)
+			})
 		})
 		mainRouter.Route("/account", func(accountRouter chi.Router) {
+			accountRouter.Use(utils.WithJWT)
 			accountRouter.Route("/profile", func(profileRouter chi.Router) {
 				profileService := profile.NewService(dbStore)
 				profileHandler := profile.NewHandler(profileService)
-				profileRouter.Patch("/", utils.WithJWT(profileHandler.UpdateProfile))
-				profileRouter.Get("/", utils.WithJWT(profileHandler.GetProfile))
+				profileRouter.Patch("/", profileHandler.UpdateProfile)
+				profileRouter.Get("/", profileHandler.GetProfile)
+			})
+		})
+		mainRouter.Route("/admin", func(adminRouter chi.Router) {
+			adminRouter.Use(utils.WithJWT)
+			adminRouter.Route("/products", func(productRouter chi.Router) {
+				productService := product.NewService(dbStore)
+				productHandler := product.NewHandler(productService)
+				productRouter.Post("/", productHandler.CreateProduct)
+				productRouter.Get("/", productHandler.GetProducts)
 			})
 		})
 	})

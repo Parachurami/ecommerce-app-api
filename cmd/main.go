@@ -15,13 +15,13 @@ func main() {
 		config.PORT,
 	)
 	ctx := context.Background()
-	conn, dbErr := db.InitDB(ctx)
+	conn, redisClient, dbErr := db.InitDB(ctx)
 	if dbErr != nil {
 		log.Print(dbErr)
 		return
 	}
 	defer conn.Close()
-	app := api.NewApp(conn, config)
+	app := api.NewApp(conn, redisClient, config)
 
 	if err := app.Run(app.Mount()); err != nil {
 		log.Fatal(err)

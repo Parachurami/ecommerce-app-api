@@ -39,7 +39,7 @@ func (s *svc) Login(params *types.LoginUserParams) (*types.User, error) {
 	log.Printf("Hash value: %v, Hash length: %v", user.Password, len(user.Password))
 	if err := utils.CompareHash(params.Password, user.Password); err != nil {
 		log.Print("Error when comparing hashes")
-		return nil, err
+		return nil, errors.New("Invalid Credentials")
 	}
 	return user, nil
 }

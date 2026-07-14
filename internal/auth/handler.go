@@ -22,6 +22,17 @@ func NewHandler(service Service, db *redis.Client) *handler {
 	}
 }
 
+// LoginUser authenticates a user
+// @Summary      Login user
+// @Description  Authenticates a user with email and password. Sets access-token, refresh-token, and refresh-token-id cookies on success.
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        body  body      types.LoginUserParams   true  "Login credentials"
+// @Success      200   {object}  map[string]interface{}  "user object"
+// @Failure      400   {object}  map[string]string
+// @Failure      500   {object}  map[string]string
+// @Router       /auth/login [post]
 func (h *handler) LoginUser(res http.ResponseWriter, req *http.Request) {
 	var params types.LoginUserParams
 	if err := utils.Read(req, &params); err != nil {
@@ -81,6 +92,17 @@ func (h *handler) LoginUser(res http.ResponseWriter, req *http.Request) {
 
 }
 
+// RegisterUser creates a new user account
+// @Summary      Register user
+// @Description  Creates a new user account and returns user data. Sets access-token, refresh-token, and refresh-token-id cookies.
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        body  body      types.RegisterUserParams  true  "Registration data"
+// @Success      200   {object}  map[string]interface{}    "user object"
+// @Failure      400   {object}  map[string]string
+// @Failure      500   {object}  map[string]string
+// @Router       /auth/register [post]
 func (h *handler) RegisterUser(res http.ResponseWriter, req *http.Request) {
 	var params types.RegisterUserParams
 	if err := utils.Read(req, &params); err != nil {
@@ -154,6 +176,16 @@ func (h *handler) RegisterUser(res http.ResponseWriter, req *http.Request) {
 	})
 }
 
+// Logout logs out the authenticated user
+// @Summary      Logout user
+// @Description  Deletes the refresh token from Redis and clears all auth cookies.
+// @Tags         auth
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {string}  string  "User Logged Out"
+// @Failure      401  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /auth/logout [post]
 func (h *handler) Logout(res http.ResponseWriter, req *http.Request) {
 	cookie, cookieErr := req.Cookie("refresh-token-id")
 	if cookieErr != nil || cookie == nil {

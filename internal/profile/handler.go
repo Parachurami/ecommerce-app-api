@@ -20,6 +20,17 @@ func NewHandler(service Service) *handler {
 	}
 }
 
+// UpdateProfile updates the authenticated user's profile
+// @Summary      Update profile
+// @Description  Updates profile fields (firstName, lastName, bio, profileImage, email) for the authenticated user.
+// @Tags         profile
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        body  body      types.UpdateProfileParams  true  "Profile update data"
+// @Success      200   {object}  map[string]interface{}
+// @Failure      400   {object}  map[string]string
+// @Router       /account/profile [patch]
 func (h *handler) UpdateProfile(res http.ResponseWriter, req *http.Request) {
 	var params types.UpdateProfileParams
 	if err := utils.Read(req, &params); err != nil {
@@ -59,6 +70,15 @@ func (h *handler) UpdateProfile(res http.ResponseWriter, req *http.Request) {
 
 }
 
+// GetProfile retrieves the authenticated user's profile
+// @Summary      Get profile
+// @Description  Returns profile information (email, bio, image, firstName, lastName, timestamps) for the authenticated user.
+// @Tags         profile
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {object}  map[string]interface{}
+// @Failure      403  {object}  map[string]string
+// @Router       /account/profile [get]
 func (h *handler) GetProfile(res http.ResponseWriter, req *http.Request) {
 	id, ok := req.Context().Value("userId").(string)
 	if !ok {

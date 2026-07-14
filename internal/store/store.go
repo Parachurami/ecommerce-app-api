@@ -198,7 +198,7 @@ func (store *Store) CreateProduct(userId uuid.UUID, params *types.CreateProductP
 	builder := utils.Psql.
 		Insert("products").
 		Columns("userId", "name", "description", "budget", "skills", "duration", "expiration", "image_url", "deliverables", "createdAt", "updatedAt").
-		Values(userId, params.Name, params.Desciption, params.Budget, params.Skills, params.Duration, params.Expiration, params.ImageUrl.String, params.Deliverables, time.Now(), time.Now()).
+		Values(userId, params.Name, params.Desciption, params.Budget, params.Skills, params.Duration, params.Expiration, params.ImageUrl, params.Deliverables, time.Now(), time.Now()).
 		Suffix("RETURNING *")
 	sql, args, sqlErr := builder.ToSql()
 	if sqlErr != nil {

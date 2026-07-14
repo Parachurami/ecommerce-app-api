@@ -24,7 +24,7 @@ var (
 )
 
 type User struct {
-	Id        uuid.NullUUID `json:"id"`
+	Id        uuid.NullUUID `json:"id"       swaggertype:"string" format:"uuid"`
 	Email     string        `json:"email"`
 	UserRole  Role          `json:"userRole"`
 	Password  string        `json:"-"`
@@ -46,11 +46,11 @@ type LoginUserParams struct {
 }
 
 type Profile struct {
-	Id           uuid.NullUUID
+	Id           uuid.NullUUID  `json:"id"         swaggertype:"string" format:"uuid"`
 	FirstName    string         `json:"firstName"`
 	LastName     string         `json:"lastName"`
-	Bio          sql.NullString `json:"userBio"`
-	ProfileImage sql.NullString `json:"imageUrl"`
+	Bio          sql.NullString `json:"userBio"    swaggertype:"string"`
+	ProfileImage sql.NullString `json:"imageUrl"   swaggertype:"string"`
 	Email        string         `json:"email"`
 	CreatedAt    time.Time      `json:"createdAt"`
 	UpdatedAt    time.Time      `json:"updatedAt"`
@@ -79,29 +79,29 @@ id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 */
 
 type Product struct {
-	Id           uuid.NullUUID  `json:"id"`
-	UserId       uuid.NullUUID  `json:"userId"`
+	Id           uuid.NullUUID  `json:"id"           swaggertype:"string"  format:"uuid"`
+	UserId       uuid.NullUUID  `json:"userId"        swaggertype:"string"  format:"uuid"`
 	Name         string         `json:"title"`
 	Description  string         `json:"desciption"`
 	Budget       float64        `json:"budget"`
 	Skills       []string       `json:"skills"`
-	Duration     time.Duration  `json:"duration"`
-	Expiration   time.Duration  `json:"expiration"`
-	ImageUrl     sql.NullString `json:"imageUrl"`
+	Duration     time.Duration  `json:"duration"      swaggertype:"integer" example:"3600000000000"`
+	Expiration   time.Duration  `json:"expiration"    swaggertype:"integer" example:"3600000000000"`
+	ImageUrl     sql.NullString `json:"imageUrl"      swaggertype:"string"`
 	Deliverables []string       `json:"deliverables"`
 	CreatedAt    time.Time      `json:"createdAt"`
 	UpdatedAt    time.Time      `json:"updatedAt"`
 }
 
 type CreateProductParams struct {
-	Name         string         `json:"name" validate:"required" msg:"name is required"`
-	Desciption   string         `json:"description" validate:"required"  msg:"name is required"`
-	Budget       float64        `json:"budget" validate:"required"  msg:"description is required"`
-	Skills       []string       `json:"skills" validate:"required"  msg:"skills is required"`
-	Duration     time.Duration  `json:"duration" validate:"required"  msg:"duration is required"`
-	Expiration   time.Duration  `json:"expiration" validate:"required"  msg:"expiration is required"`
-	ImageUrl     sql.NullString `json:"image" validate:"required"  msg:"image is required"`
-	Deliverables []string       `json:"deliverables" validate:"required"  msg:"deliverables is required"`
+	Name         string        `json:"name"         validate:"required" msg:"name is required"`
+	Desciption   string        `json:"description"  validate:"required" msg:"name is required"`
+	Budget       float64       `json:"budget"       validate:"required" msg:"description is required"`
+	Skills       []string      `json:"skills"       validate:"required" msg:"skills is required"`
+	Duration     time.Duration `json:"duration"     validate:"required" msg:"duration is required"    swaggertype:"integer" example:"3600000000000"`
+	Expiration   time.Duration `json:"expiration"   validate:"required" msg:"expiration is required"  swaggertype:"integer" example:"3600000000000"`
+	ImageUrl     string        `json:"image"        validate:"required" msg:"image is required"`
+	Deliverables []string      `json:"deliverables" validate:"required" msg:"deliverables is required"`
 }
 
 type UpdateProductParams struct {

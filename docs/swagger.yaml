@@ -1,0 +1,339 @@
+definitions:
+  types.CreateProductParams:
+    properties:
+      budget:
+        type: number
+      deliverables:
+        items:
+          type: string
+        type: array
+      description:
+        type: string
+      duration:
+        example: 3600000000000
+        type: integer
+      expiration:
+        example: 3600000000000
+        type: integer
+      image:
+        type: string
+      name:
+        type: string
+      skills:
+        items:
+          type: string
+        type: array
+    required:
+    - budget
+    - deliverables
+    - description
+    - duration
+    - expiration
+    - image
+    - name
+    - skills
+    type: object
+  types.LoginUserParams:
+    properties:
+      confirmPassword:
+        type: string
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - confirmPassword
+    - email
+    - password
+    type: object
+  types.Product:
+    properties:
+      budget:
+        type: number
+      createdAt:
+        type: string
+      deliverables:
+        items:
+          type: string
+        type: array
+      desciption:
+        type: string
+      duration:
+        example: 3600000000000
+        type: integer
+      expiration:
+        example: 3600000000000
+        type: integer
+      id:
+        format: uuid
+        type: string
+      imageUrl:
+        type: string
+      skills:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+      updatedAt:
+        type: string
+      userId:
+        format: uuid
+        type: string
+    type: object
+  types.RegisterUserParams:
+    properties:
+      email:
+        type: string
+      firstName:
+        type: string
+      lastName:
+        type: string
+      password:
+        maxLength: 130
+        minLength: 6
+        type: string
+      role:
+        type: string
+    required:
+    - email
+    - firstName
+    - lastName
+    - password
+    - role
+    type: object
+  types.UpdateProfileParams:
+    properties:
+      bio:
+        type: string
+      email:
+        type: string
+      firstName:
+        type: string
+      lastName:
+        type: string
+      profileImage:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /account/profile:
+    get:
+      description: Returns profile information (email, bio, image, firstName, lastName,
+        timestamps) for the authenticated user.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get profile
+      tags:
+      - profile
+    patch:
+      consumes:
+      - application/json
+      description: Updates profile fields (firstName, lastName, bio, profileImage,
+        email) for the authenticated user.
+      parameters:
+      - description: Profile update data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/types.UpdateProfileParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update profile
+      tags:
+      - profile
+  /admin/products:
+    get:
+      description: Returns all products belonging to the authenticated admin user.
+        Restricted to admin users only.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/types.Product'
+            type: array
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get products
+      tags:
+      - products
+    post:
+      consumes:
+      - application/json
+      description: Creates a new product listing. Restricted to admin users only.
+      parameters:
+      - description: Product data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/types.CreateProductParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.Product'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create product
+      tags:
+      - products
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates a user with email and password. Sets access-token,
+        refresh-token, and refresh-token-id cookies on success.
+      parameters:
+      - description: Login credentials
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/types.LoginUserParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: user object
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Login user
+      tags:
+      - auth
+  /auth/logout:
+    post:
+      description: Deletes the refresh token from Redis and clears all auth cookies.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User Logged Out
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Logout user
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user account and returns user data. Sets access-token,
+        refresh-token, and refresh-token-id cookies.
+      parameters:
+      - description: Registration data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/types.RegisterUserParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: user object
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Register user
+      tags:
+      - auth
+swagger: "2.0"

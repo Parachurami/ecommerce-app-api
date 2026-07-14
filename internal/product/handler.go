@@ -19,6 +19,18 @@ func NewHandler(service Service) *handler {
 	}
 }
 
+// CreateProduct creates a new product
+// @Summary      Create product
+// @Description  Creates a new product listing. Restricted to admin users only.
+// @Tags         products
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        body  body      types.CreateProductParams  true  "Product data"
+// @Success      200   {object}  types.Product
+// @Failure      400   {object}  map[string]string
+// @Failure      403   {object}  map[string]string
+// @Router       /admin/products [post]
 func (h *handler) CreateProduct(res http.ResponseWriter, req *http.Request) {
 	var params types.CreateProductParams
 	if err := utils.Read(req, &params); err != nil {
@@ -63,6 +75,16 @@ func (h *handler) CreateProduct(res http.ResponseWriter, req *http.Request) {
 
 }
 
+// GetProducts retrieves all products for the authenticated admin
+// @Summary      Get products
+// @Description  Returns all products belonging to the authenticated admin user. Restricted to admin users only.
+// @Tags         products
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {array}   types.Product
+// @Failure      403  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /admin/products [get]
 func (h *handler) GetProducts(res http.ResponseWriter, req *http.Request) {
 	roleObject, roleObjectOk := req.Context().Value("userRole").(string)
 	idObject, idObjectOk := req.Context().Value("userId").(string)

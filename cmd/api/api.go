@@ -1,9 +1,11 @@
 package api
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 
+	"github.com/Parachurami/ecommerce-app-api/docs"
 	userAuth "github.com/Parachurami/ecommerce-app-api/internal/auth"
 	"github.com/Parachurami/ecommerce-app-api/internal/product"
 	"github.com/Parachurami/ecommerce-app-api/internal/profile"
@@ -14,6 +16,15 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
 )
+
+// @title           My E-Commerce API
+// @version         1.0
+// @description     This is the backend API for my application.
+// @host            your-app.onrender.com
+// @BasePath        /api/v1
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 
 type application struct {
 	db          *pgxpool.Pool
@@ -36,8 +47,39 @@ func (app *application) Mount() http.Handler {
 	// router.Use(middleware.ClientIPFromRemoteAddr)
 	dbStore := store.NewStore(app.db)
 	router.Route("/api/v1", func(mainRouter chi.Router) {
+		mainRouter.Get("/swagger.json", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			// docs.SwaggerInfo.ReadDoc() returns the generated JSON as a string!
+			w.Write([]byte(docs.SwaggerInfo.ReadDoc()))
+		})
+		mainRouter.Get("/docs", func(w http.ResponseWriter, r *http.Request) {
+			html := `<!doctype html>
+		<html>
+		  <head>
+			<title>API Reference</title>
+			<meta charset="utf-8" />
+			<meta name="viewport" content="width=device-width, initial-scale=1" />
+			<style>
+			  /* Optional: Customizing the theme to match your brand */
+			  :root { --theme-color-1: #00b894; }
+			</style>
+		  </head>
+		  <body>
+			<script id="api-reference" data-url="/api/v1/swagger.json"></script>
+			
+			<script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
+		  </body>
+		</html>`
+
+			w.Header().Set("Content-Type", "text/html")
+			w.Write([]byte(html))
+		})
 		mainRouter.Get("/health", func(res http.ResponseWriter, req *http.Request) {
-			res.Write([]byte("Everything is good"))
+			res.Header().Set("Content-Type", "application/json")
+			res.WriteHeader(http.StatusOK)
+			json.NewEncoder(res).Encode(map[string]any{
+				"message": "Everything is good",
+			})
 		})
 		mainRouter.Route("/auth", func(r chi.Router) {
 			authService := userAuth.NewService(dbStore)

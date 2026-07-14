@@ -30,7 +30,7 @@ func NewHandler(service Service) *handler {
 // @Success      200   {object}  types.Product
 // @Failure      400   {object}  map[string]string
 // @Failure      403   {object}  map[string]string
-// @Router       /admin/products [post]
+// @Router       /api/v1/admin/products [post]
 func (h *handler) CreateProduct(res http.ResponseWriter, req *http.Request) {
 	var params types.CreateProductParams
 	if err := utils.Read(req, &params); err != nil {
@@ -84,7 +84,7 @@ func (h *handler) CreateProduct(res http.ResponseWriter, req *http.Request) {
 // @Success      200  {array}   types.Product
 // @Failure      403  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
-// @Router       /admin/products [get]
+// @Router       /api/v1/admin/products [get]
 func (h *handler) GetProducts(res http.ResponseWriter, req *http.Request) {
 	roleObject, roleObjectOk := req.Context().Value("userRole").(string)
 	idObject, idObjectOk := req.Context().Value("userId").(string)

@@ -21,7 +21,7 @@ import (
 // @version         1.0
 // @description     This is the backend API for my application.
 // @host            your-app.onrender.com
-// @BasePath        /api/v1
+// @BasePath        /
 // @securityDefinitions.apikey BearerAuth
 // @in header
 // @name Authorization

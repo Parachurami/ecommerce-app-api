@@ -32,7 +32,7 @@ func NewHandler(service Service, db *redis.Client) *handler {
 // @Success      200   {object}  map[string]interface{}  "user object"
 // @Failure      400   {object}  map[string]string
 // @Failure      500   {object}  map[string]string
-// @Router       /auth/login [post]
+// @Router       /api/v1/auth/login [post]
 func (h *handler) LoginUser(res http.ResponseWriter, req *http.Request) {
 	var params types.LoginUserParams
 	if err := utils.Read(req, &params); err != nil {
@@ -102,7 +102,7 @@ func (h *handler) LoginUser(res http.ResponseWriter, req *http.Request) {
 // @Success      200   {object}  map[string]interface{}    "user object"
 // @Failure      400   {object}  map[string]string
 // @Failure      500   {object}  map[string]string
-// @Router       /auth/register [post]
+// @Router       /api/v1/auth/register [post]
 func (h *handler) RegisterUser(res http.ResponseWriter, req *http.Request) {
 	var params types.RegisterUserParams
 	if err := utils.Read(req, &params); err != nil {
@@ -185,7 +185,7 @@ func (h *handler) RegisterUser(res http.ResponseWriter, req *http.Request) {
 // @Success      200  {string}  string  "User Logged Out"
 // @Failure      401  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
-// @Router       /auth/logout [post]
+// @Router       /api/v1/auth/logout [post]
 func (h *handler) Logout(res http.ResponseWriter, req *http.Request) {
 	cookie, cookieErr := req.Cookie("refresh-token-id")
 	if cookieErr != nil || cookie == nil {

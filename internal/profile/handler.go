@@ -30,7 +30,7 @@ func NewHandler(service Service) *handler {
 // @Param        body  body      types.UpdateProfileParams  true  "Profile update data"
 // @Success      200   {object}  map[string]interface{}
 // @Failure      400   {object}  map[string]string
-// @Router       /account/profile [patch]
+// @Router       /api/v1/account/profile [patch]
 func (h *handler) UpdateProfile(res http.ResponseWriter, req *http.Request) {
 	var params types.UpdateProfileParams
 	if err := utils.Read(req, &params); err != nil {
@@ -78,7 +78,7 @@ func (h *handler) UpdateProfile(res http.ResponseWriter, req *http.Request) {
 // @Security     BearerAuth
 // @Success      200  {object}  map[string]interface{}
 // @Failure      403  {object}  map[string]string
-// @Router       /account/profile [get]
+// @Router       /api/v1/account/profile [get]
 func (h *handler) GetProfile(res http.ResponseWriter, req *http.Request) {
 	id, ok := req.Context().Value("userId").(string)
 	if !ok {

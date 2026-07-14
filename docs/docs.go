@@ -15,7 +15,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/account/profile": {
+        "/api/v1/account/profile": {
             "get": {
                 "security": [
                     {
@@ -97,7 +97,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/admin/products": {
+        "/api/v1/admin/products": {
             "get": {
                 "security": [
                     {
@@ -198,7 +198,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/auth/login": {
+        "/api/v1/auth/login": {
             "post": {
                 "description": "Authenticates a user with email and password. Sets access-token, refresh-token, and refresh-token-id cookies on success.",
                 "consumes": [
@@ -251,7 +251,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/auth/logout": {
+        "/api/v1/auth/logout": {
             "post": {
                 "security": [
                     {
@@ -294,7 +294,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/auth/register": {
+        "/api/v1/auth/register": {
             "post": {
                 "description": "Creates a new user account and returns user data. Sets access-token, refresh-token, and refresh-token-id cookies.",
                 "consumes": [

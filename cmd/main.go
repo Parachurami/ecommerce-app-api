@@ -23,6 +23,8 @@ func main() {
 	defer conn.Close()
 	app := api.NewApp(conn, redisClient, config)
 
+	db.RunMigrations(conn)
+
 	if err := app.Run(app.Mount()); err != nil {
 		log.Fatal(err)
 		return

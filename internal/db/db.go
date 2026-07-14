@@ -6,7 +6,10 @@ import (
 	"time"
 
 	"github.com/Parachurami/ecommerce-app-api/config"
+	"github.com/Parachurami/ecommerce-app-api/internal/migrate/migrations"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5/stdlib"
+	"github.com/pressly/goose/v3"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -40,4 +43,23 @@ func InitDB(ctx context.Context) (*pgxpool.Pool, *redis.Client, error) {
 	}
 	log.Print("Successfully connected to DB!!")
 	return conn, client, nil
+}
+
+func RunMigrations(pool *pgxpool.Pool) {
+	goose.SetBaseFS(migrations.FS)
+
+	if err := goose.SetDialect("postgres"); err != nil {
+		log.Fatalf("Failed to set goose dialect: %v", err)
+	}
+
+	log.Println("Checking for pending database migrations...")
+
+	migrationDB := stdlib.OpenDBFromPool(pool)
+
+	// 2. Tell Goose to look directly at the "sql" folder
+	if err := goose.Up(migrationDB, "sql"); err != nil {
+		log.Fatalf("Failed to run database migrations: %v", err)
+	}
+
+	log.Println("Database is fully migrated and up to date!")
 }

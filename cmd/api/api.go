@@ -33,7 +33,7 @@ func (app *application) Mount() http.Handler {
 	router := chi.NewRouter()
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
-	router.Use(middleware.ClientIPFromRemoteAddr)
+	// router.Use(middleware.ClientIPFromRemoteAddr)
 	dbStore := store.NewStore(app.db)
 	router.Route("/api/v1", func(mainRouter chi.Router) {
 		mainRouter.Get("/health", func(res http.ResponseWriter, req *http.Request) {
